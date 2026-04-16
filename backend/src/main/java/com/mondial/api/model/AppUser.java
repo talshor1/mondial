@@ -7,7 +7,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +29,9 @@ public class AppUser {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @OneToMany(mappedBy = "user")
+    private List<Bet> bets = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -57,6 +63,14 @@ public class AppUser {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public List<Bet> getBets() {
+        return bets;
+    }
+
+    public void setBets(List<Bet> bets) {
+        this.bets = bets;
     }
 }
 

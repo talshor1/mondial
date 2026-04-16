@@ -17,13 +17,26 @@ Spring Boot backend API with JWT authentication, BCrypt password hashing, roles,
 - Spring Boot 3.3.x
 - Spring Security
 - Spring Data JPA
-- H2 (in-memory)
+- PostgreSQL (Neon)
 - JJWT
 
 ## Quick Start
 
+The project is preconfigured with your Neon PostgreSQL defaults in `application.properties`.
+
 ```bash
 cd /Users/talshor/git/mondial/backend
+mvn spring-boot:run
+```
+
+Recommended (override credentials via env vars instead of source defaults):
+
+```bash
+cd /Users/talshor/git/mondial/backend
+export DB_URL="jdbc:postgresql://ep-long-breeze-amljbz2n.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require"
+export DB_USER="neondb_owner"
+export DB_PASSWORD="<your-password>"
+export APP_JWT_SECRET="replace-with-a-long-random-secret-at-least-32-chars"
 mvn spring-boot:run
 ```
 
