@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../AuthContext";
 
 export default function LoginPage() {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, token } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  if (token) return <Navigate to="/" replace />;
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {

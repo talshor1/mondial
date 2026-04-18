@@ -72,12 +72,14 @@ public class NationController {
     public ResponseEntity<BetResponse> placeBet(@PathVariable Long id,
                                                  @RequestBody CreateBetRequest req,
                                                  Authentication auth) {
+        System.out.println("[BET] Received bet request for game " + id + " from " + (auth != null ? auth.getName() : "null"));
         var game = gameRepository.findById(id).orElse(null);
-        if (game == null) return ResponseEntity.notFound().build();
-        if (game.getStatus() != GameStatus.OPEN) return ResponseEntity.badRequest().build();
-        if (game.getStartsAt().isBefore(OffsetDateTime.now())) return ResponseEntity.badRequest().build();
+        if (game == null) { System.out.println("[BET] Game not found: " + id); return ResponseEntity.notFound().build(); }
+        if (game.getStatus() != GameStatus.OPEN) { System.out.println("[BET] Game not OPEN: " + game.getStatus()); return ResponseEntity.badRequest().build(); }
+        if (game.getStartsAt().isBefore(OffsetDateTime.now())) { System.out.println("[BET] Game already started: " + game.getStartsAt()); return ResponseEntity.badRequest().build(); }
 
         var user = userRepository.findByEmail(auth.getName()).orElseThrow();
+        System.out.println("[BET] User found: " + user.getEmail() + " placing bet " + req.homeGoals() + "-" + req.awayGoals());
         var bet = betRepository.findByUserAndGame(user, game).orElse(new Bet());
         bet.setUser(user);
         bet.setGame(game);
@@ -85,6 +87,7 @@ public class NationController {
         bet.setAwayGoals(req.awayGoals());
         bet.setPlacedAt(OffsetDateTime.now());
         betRepository.save(bet);
+        System.out.println("[BET] Bet saved with id " + bet.getId());
 
         return ResponseEntity.ok(new BetResponse(bet.getId(), game.getId(), bet.getHomeGoals(), bet.getAwayGoals(), null));
     }

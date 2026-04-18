@@ -83,6 +83,7 @@ export default function HomePage() {
   const [inputs, setInputs] = useState<Record<number, [string, string]>>({});
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [saved, setSaved] = useState<Record<number, boolean>>({});
+  const [betError, setBetError] = useState<Record<number, string>>({});
 
   // team name
   const [teamInput, setTeamInput] = useState("");
@@ -147,13 +148,20 @@ export default function HomePage() {
 
   const handlePlaceBet = async (gameId: number) => {
     const [h, a] = inputs[gameId] ?? ["", ""];
-    if (h === "" || a === "") return;
+    console.log("[BET] handlePlaceBet called", gameId, "h=", h, "a=", a);
+    if (h === "" || a === "") { console.log("[BET] inputs empty, aborting"); return; }
     setSaving((p) => ({ ...p, [gameId]: true }));
+    setBetError((p) => ({ ...p, [gameId]: "" }));
     try {
       const r = await placeBet(gameId, parseInt(h), parseInt(a));
       setBets((p) => ({ ...p, [gameId]: r.data }));
       setSaved((p) => ({ ...p, [gameId]: true }));
       setTimeout(() => setSaved((p) => ({ ...p, [gameId]: false })), 2000);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const msg = status === 400 ? "Betting closed for this match" : "Failed to save bet";
+      setBetError((p) => ({ ...p, [gameId]: msg }));
+      console.error("placeBet error", err);
     } finally {
       setSaving((p) => ({ ...p, [gameId]: false }));
     }
@@ -370,6 +378,9 @@ export default function HomePage() {
                         {isSaved ? "✓ Saved" : isSaving ? "…" : myBet ? "Update" : "Bet"}
                       </button>
                     </div>
+                    {betError[game.id] && (
+                      <p style={{ textAlign: "center", color: "#f87171", fontSize: "0.8rem", marginTop: "0.35rem" }}>{betError[game.id]}</p>
+                    )}
                   </div>
                 )}
 
