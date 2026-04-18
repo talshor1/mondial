@@ -1,6 +1,7 @@
 package com.mondial.api.controller;
 
 import com.mondial.api.dto.AuthResponse;
+import com.mondial.api.dto.GoogleAuthRequest;
 import com.mondial.api.dto.LoginRequest;
 import com.mondial.api.dto.RegisterRequest;
 import com.mondial.api.service.AuthService;
@@ -31,6 +32,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@Valid @RequestBody GoogleAuthRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request.credential()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

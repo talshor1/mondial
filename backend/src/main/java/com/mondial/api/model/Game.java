@@ -24,8 +24,15 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** ID from the WC2026 external API – used for upserts */
+    @Column(unique = true)
+    private Integer externalId;
+
     @Column(nullable = false)
-    private String name;
+    private String homeTeam;
+
+    @Column(nullable = false)
+    private String awayTeam;
 
     @Column(nullable = false)
     private OffsetDateTime startsAt;
@@ -34,6 +41,13 @@ public class Game {
     @Column(nullable = false)
     private GameStatus status = GameStatus.OPEN;
 
+    /** Set by admin when the match finishes */
+    @Column(nullable = true)
+    private Integer homeScore;
+
+    @Column(nullable = true)
+    private Integer awayScore;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private AppUser createdBy;
@@ -41,52 +55,33 @@ public class Game {
     @OneToMany(mappedBy = "game")
     private List<Bet> bets = new ArrayList<>();
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Integer getExternalId() { return externalId; }
+    public void setExternalId(Integer externalId) { this.externalId = externalId; }
 
-    public String getName() {
-        return name;
-    }
+    public String getHomeTeam() { return homeTeam; }
+    public void setHomeTeam(String homeTeam) { this.homeTeam = homeTeam; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getAwayTeam() { return awayTeam; }
+    public void setAwayTeam(String awayTeam) { this.awayTeam = awayTeam; }
 
-    public OffsetDateTime getStartsAt() {
-        return startsAt;
-    }
+    public OffsetDateTime getStartsAt() { return startsAt; }
+    public void setStartsAt(OffsetDateTime startsAt) { this.startsAt = startsAt; }
 
-    public void setStartsAt(OffsetDateTime startsAt) {
-        this.startsAt = startsAt;
-    }
+    public GameStatus getStatus() { return status; }
+    public void setStatus(GameStatus status) { this.status = status; }
 
-    public GameStatus getStatus() {
-        return status;
-    }
+    public Integer getHomeScore() { return homeScore; }
+    public void setHomeScore(Integer homeScore) { this.homeScore = homeScore; }
 
-    public void setStatus(GameStatus status) {
-        this.status = status;
-    }
+    public Integer getAwayScore() { return awayScore; }
+    public void setAwayScore(Integer awayScore) { this.awayScore = awayScore; }
 
-    public AppUser getCreatedBy() {
-        return createdBy;
-    }
+    public AppUser getCreatedBy() { return createdBy; }
+    public void setCreatedBy(AppUser createdBy) { this.createdBy = createdBy; }
 
-    public void setCreatedBy(AppUser createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public List<Bet> getBets() {
-        return bets;
-    }
-
-    public void setBets(List<Bet> bets) {
-        this.bets = bets;
-    }
+    public List<Bet> getBets() { return bets; }
+    public void setBets(List<Bet> bets) { this.bets = bets; }
 }
-

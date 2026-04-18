@@ -4,10 +4,10 @@ import java.time.OffsetDateTime;
 
 public record GameResponse(
         Long id,
-        String name,
-        String status,
+        String homeTeam,
+        String awayTeam,
         OffsetDateTime startsAt,
-        String createdBy
-) {
-}
-
+        String status,
+        Integer homeScore,
+        Integer awayScore
+) {}

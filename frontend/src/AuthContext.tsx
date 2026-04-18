@@ -3,27 +3,17 @@ import api from "./api";
 
 interface AuthContextType {
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
-  );
+  const [token, setToken] = useState<string | null>(null);
 
-  const login = async (email: string, password: string) => {
-    const res = await api.post("/api/auth/login", { email, password });
-    const t = res.data.token;
-    localStorage.setItem("token", t);
-    setToken(t);
-  };
-
-  const register = async (email: string, password: string) => {
-    const res = await api.post("/api/auth/register", { email, password });
+  const loginWithGoogle = async (credential: string) => {
+    const res = await api.post("/api/auth/google", { credential });
     const t = res.data.token;
     localStorage.setItem("token", t);
     setToken(t);
@@ -35,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, register, logout }}>
+    <AuthContext.Provider value={{ token, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
