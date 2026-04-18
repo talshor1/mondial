@@ -102,18 +102,30 @@ export default function HomePage() {
   const [expandedLeague, setExpandedLeague] = useState<number | null>(null);
 
   useEffect(() => {
-    api.get("/api/users/me").then((r) => setUser(r.data));
-    getMyLeagues().then((r) => setLeagues(r.data));
-    getGames().then((r) => setGames(r.data));
+    api.get("/api/users/me")
+      .then((r) => setUser(r.data))
+      .catch((err) => {
+        if (err?.response?.status === 401 || err?.response?.status === 403) {
+          logout(); navigate("/login");
+        }
+      });
+    getMyLeagues().then((r) => setLeagues(r.data)).catch(() => {});
+    getGames().then((r) => {
+      setGames(r.data);
+      // pre-fill all inputs with "0" so Bet button is immediately enabled
+      const inp: Record<number, [string, string]> = {};
+      (r.data as Game[]).forEach((g) => { inp[g.id] = ["0", "0"]; });
+      setInputs((prev) => ({ ...inp, ...prev }));
+    }).catch(() => {});
     getMyBets().then((r) => {
       const map: Record<number, BetRecord> = {};
       (r.data as BetRecord[]).forEach((b) => { map[b.gameId] = b; });
       setBets(map);
-      // pre-fill inputs from existing bets
+      // override with actual bet values
       const inp: Record<number, [string, string]> = {};
       (r.data as BetRecord[]).forEach((b) => { inp[b.gameId] = [String(b.homeGoals), String(b.awayGoals)]; });
-      setInputs(inp);
-    });
+      setInputs((prev) => ({ ...prev, ...inp }));
+    }).catch(() => {});
   }, []);
 
   const handleLogout = () => { logout(); navigate("/login"); };
