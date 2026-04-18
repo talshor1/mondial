@@ -1,6 +1,7 @@
 package com.mondial.api.service;
 
 import com.mondial.api.model.*;
+import com.mondial.api.repository.BetRepository;
 import com.mondial.api.repository.GameRepository;
 import com.mondial.api.repository.SyncMetaRepository;
 import com.mondial.api.repository.UserRepository;
@@ -34,20 +35,26 @@ public class WC2026SyncService {
     private String apiKey;
 
     private final GameRepository gameRepository;
+    private final BetRepository betRepository;
     private final SyncMetaRepository syncMetaRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final GameService gameService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public WC2026SyncService(GameRepository gameRepository,
+                              BetRepository betRepository,
                               SyncMetaRepository syncMetaRepository,
                               UserRepository userRepository,
-                              PasswordEncoder passwordEncoder) {
+                              PasswordEncoder passwordEncoder,
+                              GameService gameService) {
         this.gameRepository = gameRepository;
+        this.betRepository = betRepository;
         this.syncMetaRepository = syncMetaRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.gameService = gameService;
     }
 
     /**
@@ -125,6 +132,7 @@ public class WC2026SyncService {
                 var existing = gameRepository.findByExternalId(externalId);
                 if (existing.isPresent()) {
                     Game g = existing.get();
+                    boolean wasNotFinished = g.getStatus() != GameStatus.FINISHED;
                     g.setHomeTeam(homeTeam);
                     g.setAwayTeam(awayTeam);
                     g.setStartsAt(kickoff);
@@ -132,6 +140,11 @@ public class WC2026SyncService {
                     g.setHomeScore(homeScore);
                     g.setAwayScore(awayScore);
                     gameRepository.save(g);
+                    // If the game just finished, bulk-score all bets atomically
+                    if (gameStatus == GameStatus.FINISHED && homeScore != null && awayScore != null && wasNotFinished) {
+                        int scored = betRepository.scoreAllForGame(g.getId(), homeScore, awayScore);
+                        log.info("Game {} finished {}–{}, scored {} bet(s) via sync", g.getId(), homeScore, awayScore, scored);
+                    }
                     updated++;
                 } else {
                     Game g = new Game();

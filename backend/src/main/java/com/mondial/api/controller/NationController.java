@@ -9,6 +9,7 @@ import com.mondial.api.model.GameStatus;
 import com.mondial.api.repository.BetRepository;
 import com.mondial.api.repository.GameRepository;
 import com.mondial.api.repository.UserRepository;
+import com.mondial.api.service.GameService;
 import com.mondial.api.service.WC2026SyncService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
@@ -35,13 +36,16 @@ public class NationController {
     private final UserRepository userRepository;
 
     private final WC2026SyncService syncService;
+    private final GameService gameService;
 
     public NationController(GameRepository gameRepository, BetRepository betRepository,
-                             UserRepository userRepository, WC2026SyncService syncService) {
+                             UserRepository userRepository, WC2026SyncService syncService,
+                             GameService gameService) {
         this.gameRepository = gameRepository;
         this.betRepository = betRepository;
         this.userRepository = userRepository;
         this.syncService = syncService;
+        this.gameService = gameService;
     }
 
     private GameResponse toGameResponse(Game g) {
@@ -75,7 +79,9 @@ public class NationController {
         System.out.println("[BET] Received bet request for game " + id + " from " + (auth != null ? auth.getName() : "null"));
         var game = gameRepository.findById(id).orElse(null);
         if (game == null) { System.out.println("[BET] Game not found: " + id); return ResponseEntity.notFound().build(); }
-        if (game.getStatus() != GameStatus.OPEN) { System.out.println("[BET] Game not OPEN: " + game.getStatus()); return ResponseEntity.badRequest().build(); }
+        if (game.getStatus() != GameStatus.OPEN) {
+            System.out.println("[BET] Game not open for betting: " + game.getStatus()); return ResponseEntity.badRequest().build();
+        }
         if (game.getStartsAt().isBefore(OffsetDateTime.now())) { System.out.println("[BET] Game already started: " + game.getStartsAt()); return ResponseEntity.badRequest().build(); }
 
         var user = userRepository.findByEmail(auth.getName()).orElseThrow();
@@ -103,28 +109,8 @@ public class NationController {
 
         int home = body.get("homeScore");
         int away = body.get("awayScore");
-        game.setHomeScore(home);
-        game.setAwayScore(away);
-        game.setStatus(GameStatus.FINISHED);
-        gameRepository.save(game);
-
-        // Determine actual outcome: H / D / A
-        String actual = home > away ? "H" : (home < away ? "A" : "D");
-
-        betRepository.findByGame(game).forEach(bet -> {
-            String predicted = bet.getHomeGoals() > bet.getAwayGoals() ? "H"
-                    : (bet.getHomeGoals() < bet.getAwayGoals() ? "A" : "D");
-            if (bet.getHomeGoals() == home && bet.getAwayGoals() == away) {
-                bet.setPoints(3); // exact score
-            } else if (predicted.equals(actual)) {
-                bet.setPoints(1); // correct outcome
-            } else {
-                bet.setPoints(0);
-            }
-            betRepository.save(bet);
-        });
-
-        return ResponseEntity.ok(toGameResponse(game));
+        var finished = gameService.finishGame(id, home, away);
+        return ResponseEntity.ok(toGameResponse(finished));
     }
 
     // ── Admin: force sync from WC2026 API ─────────────────────────────────────

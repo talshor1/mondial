@@ -337,8 +337,8 @@ export default function HomePage() {
               <div key={game.id} className={`match-card ${myBet ? "match-card--bet" : ""}`}>
                 <div className="match-meta">
                   <span className="match-group">{new Date(game.startsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
-                  <span className={`match-group`} style={{ color: game.status === "FINISHED" ? "#4ade80" : game.status === "OPEN" ? "#60a5fa" : "#f59e0b" }}>
-                    {game.status === "FINISHED" ? "Final" : game.status === "OPEN" ? "Open" : game.status}
+                  <span className={`match-group`} style={{ color: game.status === "FINISHED" ? "#4ade80" : game.status === "OPEN" ? "#60a5fa" : game.status === "IN_PROGRESS" ? "#f97316" : "#f59e0b" }}>
+                    {game.status === "FINISHED" ? "Final" : game.status === "OPEN" ? "Open" : game.status === "IN_PROGRESS" ? "🔴 Live" : game.status}
                   </span>
                 </div>
 
@@ -396,8 +396,8 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {!open && game.status === "OPEN" && (
-                  <p style={{ textAlign: "center", color: "#64748b", fontSize: "0.8rem", marginTop: "0.5rem" }}>Match started – betting closed</p>
+                {game.status === "IN_PROGRESS" && (
+                  <p style={{ textAlign: "center", color: "#f97316", fontSize: "0.8rem", marginTop: "0.5rem" }}>Match in progress – betting closed</p>
                 )}
               </div>
             );
